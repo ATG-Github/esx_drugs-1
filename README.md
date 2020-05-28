@@ -1,15 +1,19 @@
-# esx_drugs
+# Security
+Tired of hackers stealing your drug locations? Faking drugs? Install this updated version with protected server events!
+- [Security FiveM Forum Thread](https://forum.cfx.re/t/re-release-esx-security-patches-updates-jail-qalle-jail-communityservice/1292760)
+
+# esx_drugs (refactored)
 
 ## Download & Installation
 
 ### Using Git
 ```
 cd resources
-git clone https://github.com/diorgesl/esx_drugs [esx]/esx_drugs
+git clone https://github.com/ATG-Github/esx_drugs-1 [esx]/esx_drugs
 ```
 
 ### Manually
-- Download https://github.com/diorgesl/esx_drugs/archive/master.zip
+- Download https://github.com/ATG-Github/esx_drugs-1
 - Put it in the `[esx]` directory
 
 ## Installation
