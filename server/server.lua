@@ -1,5 +1,11 @@
+-- ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~= --
+--			Created By: diorgesl AKA diorgera   		  --
+--			 Protected By: ATG-Github AKA ATG			  --
+-- ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~= --
+
 ESX								= nil
 local CopsConnected				= 0
+local activeCops = {}
 local PlayersHarvesting			= {}
 local PlayersTransforming		= {}
 local PlayersSelling			= {}
@@ -8,18 +14,78 @@ local Drug						= {}
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
 function CountCops()
-	local xPlayers = ESX.GetPlayers()
-	CopsConnected = 0
-	for i=1, #xPlayers, 1 do
-		local xPlayer = ESX.GetPlayerFromId(xPlayers[i])
-		if xPlayer.job.name == 'police' then
-			CopsConnected = CopsConnected + 1
-		end
-	end
-	SetTimeout(120 * 1000, CountCops)
+    return CopsConnected
 end
 
-CountCops()
+function fetchCops()
+    local xPlayers = ESX.GetPlayers()
+    CopsConnected = 0
+    for i = 1, #xPlayers, 1 do
+        local xPlayer = ESX.GetPlayerFromId(xPlayers[i])
+        if xPlayer.job.name == "police" then
+            CopsConnected = CopsConnected + 1
+            activeCops[#activeCops + 1] = xPlayer.source
+        end
+    end
+    SetTimeout(120 * 1000, fetchCops)
+end
+
+Citizen.CreateThread(fetchCops)
+
+function ensureLegitness(xPlayer, drug, stage)
+	local xPlayer, drug, stage = xPlayer, drug, stage;
+	local legit = {["legit"] = true, ["reason"] = "No flags found."}
+	if xPlayer ~= nil then
+		local pCoord = xPlayer.getCoords();
+		if pCoord ~= nil then
+			if drug ~= nil then
+				if stage ~= nil then
+					local dCoord = Config.Drugs[drug];
+					if dcoord ~= nil then
+						local radius = tonumber(dCoord.ZoneSize.x * dCoord.ZoneSize.y * dCoord.ZoneSize.z)
+						if stage == "collect" then
+							local x, y, z = dCoord.Zones.Field.x, dCoord.Zones.Field.y, dCoord.Zones.Field.z;
+							local distance = #(pCoord - vector3(x, y, z));
+							if distance < radius * 2.5 then
+								return legit
+							else
+								legit = {["legit"] = false, ["reason"] = "Player was out of the radius."}
+								return legit
+							end
+						elseif stage == "process" then
+							local x, y, z = dCoord.Zones.Processing.x, dCoord.Zones.Processing.y, dCoord.Zones.Processing.z;
+							local distance = #(pCoord - vector3(x, y, z));
+							if distance < radius * 2.5 then
+								return legit
+							else
+								legit = {["legit"] = false, ["reason"] = "Player was out of the radius."}
+								return legit
+							end
+						else
+							legit = {["legit"] = false, ["reason"] = "The drug stage could not be matched."}
+							return legit
+						end
+					else
+						legit = {["legit"] = false, ["reason"] = "The drug could not be matched."}
+						return legit
+					end
+				else
+					legit = {["legit"] = false, ["reason"] = "The drug stage was not supplied."}
+					return legit
+				end
+			else
+				legit = {["legit"] = false, ["reason"] = "The drug type was not supplied."}
+				return legit
+			end
+		else
+			legit = {["legit"] = false, ["reason"] = "Player coords were nil."}
+			return legit
+		end
+	else
+		legit = {["legit"] = false, ["reason"] = "xPlayer was nil."}
+		return legit
+	end
+end
 
 local function Harvest(source, drug)
 	local v = Config.Drugs[""..drug ..""]
@@ -29,15 +95,28 @@ local function Harvest(source, drug)
 	end
 	SetTimeout(v.TimeToFarm * 1000, function()
 		if PlayersHarvesting[source] == true and Drug[source] == drug then
-			local xPlayer  = ESX.GetPlayerFromId(source)
+			local _source = source;
+			local xPlayer  = ESX.GetPlayerFromId(_source)
 			local item = xPlayer.getInventoryItem(v.Item)
 			local qtd = math.random(1,10)
-			if xPlayer.canCarryItem(v.Item, qtd) then
-				xPlayer.addInventoryItem(v.Item, qtd)
-				Harvest(source, drug)
+
+			local legit = ensureLegitness(xPlayer, drug, "collect");
+			if legit["legit"] == true then
+				if xPlayer.canCarryItem(v.Item, qtd) then
+					xPlayer.addInventoryItem(v.Item, qtd)
+					Harvest(source, drug)
+				else
+					TriggerClientEvent('esx_drugs:hasExitedMarker')
+					TriggerClientEvent('esx:showNotification', _source, _U('inv_full'))
+				end
 			else
+				print(
+					string.format(
+						"^2%s^7 -> [^1%s^7] ^1%s^7 has attempted to collect ^2%s^7 but the legitness check returned false because ^1%s^7.",
+						GetCurrentResourceName(), _source, GetPlayerName(_source), drug, legit["reason"]
+					)
+				)
 				TriggerClientEvent('esx_drugs:hasExitedMarker')
-				TriggerClientEvent('esx:showNotification', source, _U('inv_full'))
 			end
 		end
 	end)
@@ -71,14 +150,26 @@ local function Transform(source, drug)
 			local xPlayer = ESX.GetPlayerFromId(_source)
 			local itemQuantity = xPlayer.getInventoryItem(v.Item).count
 			local transformQuantity = xPlayer.getInventoryItem(v.ItemTransform).count
-			if transformQuantity > 100 then
-				TriggerClientEvent('esx:showNotification', source, _U('too_many_pouches'))
-			elseif itemQuantity < 25 then
-				TriggerClientEvent('esx:showNotification', source, _U('not_enough', drug))
+
+			local legit = ensureLegitness(xPlayer, drug, "process");
+			if legit["legit"] == true then
+				if transformQuantity > 100 then
+					TriggerClientEvent('esx:showNotification', _source, _U('too_many_pouches'))
+				elseif itemQuantity < 25 then
+					TriggerClientEvent('esx:showNotification', _source, _U('not_enough', drug))
+				else
+					xPlayer.removeInventoryItem(v.Item, 25)
+					xPlayer.addInventoryItem(v.ItemTransform, 1)
+					Transform(_source, drug)
+				end
 			else
-				xPlayer.removeInventoryItem(v.Item, 25)
-				xPlayer.addInventoryItem(v.ItemTransform, 1)
-				Transform(source, drug)
+				print(
+					string.format(
+						"^2%s^7 -> [^1%s^7] ^1%s^7 has attempted to collect ^2%s^7 but the legitness check returned false because ^1%s^7.",
+						GetCurrentResourceName(), _source, GetPlayerName(_source), drug, legit["reason"]
+					)
+				)
+				TriggerClientEvent('esx_drugs:hasExitedMarker')
 			end
 
 		end
@@ -167,3 +258,11 @@ for k,v in pairs(Config.Drugs) do
 		end)
 	end
 end
+
+local calledUsers = {};
+ESX.RegisterServerCallback('esx_drugs:getCoords', function(source, cb)
+	if calledUsers[source] == nil then
+		calledUsers[source] = true;
+		cb(Config.CircleZones)
+	end
+end)

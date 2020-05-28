@@ -1,3 +1,8 @@
+-- ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~= --
+--			Created By: diorgesl AKA diorgera   		  --
+--			 Protected By: ATG-Github AKA ATG			  --
+-- ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~= --
+
 local Keys = {
 	["ESC"] = 322, ["F1"] = 288, ["F2"] = 289, ["F3"] = 170, ["F5"] = 166, ["F6"] = 167, ["F7"] = 168, ["F8"] = 169, ["F9"] = 56, ["F10"] = 57,
 	["~"] = 243, ["1"] = 157, ["2"] = 158, ["3"] = 160, ["4"] = 164, ["5"] = 165, ["6"] = 159, ["7"] = 161, ["8"] = 162, ["9"] = 163, ["-"] = 84, ["="] = 83, ["BACKSPACE"] = 177,
@@ -35,6 +40,9 @@ Citizen.CreateThread(function()
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 		Citizen.Wait(0)
 	end
+	ESX.TriggerServerCallback('esx_drugs:getCoords', function(retTbl)
+		Config.Drugs = retTbl;
+	end)
 end)
 
 RegisterNetEvent('esx:setJob')
@@ -43,6 +51,9 @@ AddEventHandler('esx:setJob', function(job)
 end)
 
 AddEventHandler('esx_drugs:hasEnteredMarker', function(zone)
+	repeat
+		Wait(0)
+	until Config.Drugs ~= nil
 	if myJob == 'police' or myJob == 'ambulance' then
 		return
 	end
@@ -120,6 +131,9 @@ end)
 
 local NPCs = {}
 Citizen.CreateThread(function()
+	repeat
+		Wait(1000)
+	until Config.Drugs ~= nil
 	while true do
 		Citizen.Wait(0)
 		local coords = GetEntityCoords(GetPlayerPed(-1))
@@ -152,6 +166,9 @@ end)
 
 if Config.ShowBlips then
 	Citizen.CreateThread(function()
+		repeat
+			Wait(1000)
+		until Config.Drugs ~= nil
 		for k,v in pairs(Config.Drugs) do
 			for i,j in pairs(v.Zones) do
 				local blip = AddBlipForCoord(j.x, j.y, j.z)
@@ -171,6 +188,9 @@ if Config.ShowBlips then
 end
 
 Citizen.CreateThread(function()
+	repeat
+		Wait(1000)
+	until Config.Drugs ~= nil
 	while true do
 
 		Citizen.Wait(0)
@@ -226,6 +246,9 @@ end)
 
 -- Key Controls
 Citizen.CreateThread(function()
+	repeat
+		Wait(1000)
+	until Config.Drugs ~= nil
 	while true do
 		Citizen.Wait(10)
 		if CurrentAction ~= nil then

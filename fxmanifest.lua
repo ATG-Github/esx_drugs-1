@@ -1,4 +1,5 @@
-resource_manifest_version '44febabe-d386-4d18-afbe-5e627f4af937'
+fx_version "adamant"
+game 'gta5'
 
 description 'ESX Illegal Drugs refactored by Diorges Rocha'
 
@@ -9,6 +10,7 @@ server_scripts {
 	'locales/en.lua',
 	'locales/br.lua',
 	'config.lua',
+	'sv_config.lua',
 	'server/server.lua',
 }
 
