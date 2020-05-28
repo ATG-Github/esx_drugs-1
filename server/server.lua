@@ -42,7 +42,7 @@ function ensureLegitness(xPlayer, drug, stage)
 				if stage ~= nil then
 					local dCoord = Config.Drugs[drug];
 					if dcoord ~= nil then
-						local radius = tonumber(dCoord.ZoneSize.x * dCoord.ZoneSize.y * dCoord.ZoneSize.z)
+						local radius = tonumber(Config.ZoneSize.x * Config.ZoneSize.y * Config.ZoneSize.z)
 						if stage == "collect" then
 							local x, y, z = dCoord.Zones.Field.x, dCoord.Zones.Field.y, dCoord.Zones.Field.z;
 							local distance = #(pCoord - vector3(x, y, z));
