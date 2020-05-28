@@ -13,7 +13,7 @@ git clone https://github.com/ATG-Github/esx_drugs-1 [esx]/esx_drugs
 ```
 
 ### Manually
-- Download https://github.com/ATG-Github/esx_drugs-1
+- Download https://github.com/ATG-Github/esx_drugs-1/releases/download/v2/esx_drugs.zip
 - Put it in the `[esx]` directory
 
 ## Installation
