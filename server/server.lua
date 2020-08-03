@@ -263,6 +263,6 @@ local calledUsers = {};
 ESX.RegisterServerCallback('esx_drugs:getCoords', function(source, cb)
 	if calledUsers[source] == nil then
 		calledUsers[source] = true;
-		cb(Config.CircleZones)
+		cb(Config.Drugs)
 	end
 end)
