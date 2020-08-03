@@ -36,12 +36,12 @@ function ensureLegitness(xPlayer, drug, stage)
 	local xPlayer, drug, stage = xPlayer, drug, stage;
 	local legit = {["legit"] = true, ["reason"] = "No flags found."}
 	if xPlayer ~= nil then
-		local pCoord = xPlayer.getCoords();
+		local pCoord = xPlayer.getCoords(true);
 		if pCoord ~= nil then
 			if drug ~= nil then
 				if stage ~= nil then
 					local dCoord = Config.Drugs[drug];
-					if dcoord ~= nil then
+					if dCoord ~= nil then
 						local radius = tonumber(Config.ZoneSize.x * Config.ZoneSize.y * Config.ZoneSize.z)
 						if stage == "collect" then
 							local x, y, z = dCoord.Zones.Field.x, dCoord.Zones.Field.y, dCoord.Zones.Field.z;
